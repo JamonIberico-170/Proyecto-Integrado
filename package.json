@@ -1,11 +1,25 @@
 {
-  "name": "Proyecto-Integrado",
+  "name": "proyecto-integrado",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start" :"node ./src/index.js",
+    "dev": "nodemon ./src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JamonIberico-170/Proyecto-Integrado.git"
   },
   "author": "",
   "license": "ISC",
-  "description": ""
+  "bugs": {
+    "url": "https://github.com/JamonIberico-170/Proyecto-Integrado/issues"
+  },
+  "homepage": "https://github.com/JamonIberico-170/Proyecto-Integrado#readme",
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.2",
+    "mysql2": "^3.13.0",
+    "nodemon": "^3.1.9"
+  }
 }

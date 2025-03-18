@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  database:
+    image: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=tiktokdb
+    ports:
+      - 3307:3306
+    
+  app:
+    build: .
+    depends_on:
+      - database
+    links:
+      - database
+    ports:
+      - 3000:3000
