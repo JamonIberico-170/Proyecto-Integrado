@@ -1,0 +1,10 @@
+En lugar de almacenar las imágenes y los vídeos en la base de datos, haciendo que las consultas sean más lentas y suponga un gran esfuerzo al sgdb,
+he decido almacenarlas dentro de un sistema de archivos, es decir, en carpetas.
+
+Lo que planteo con esto es crear una carpeta raíz, '/' por ejemplo, y dentro ir creando carpetas por usuarios donde se almacenarán sus videos y 
+imágenes.
+
+Ejemplo: 
+
+Usuario 1 sube un video. Se hace un post a la base de datos y se lanza un trigger. En el sistema de archivos se crea /usuario1/videos/video_subido.
+A continuación, en la BBDD, se almacena en url /usuario1/videos/video_subido
