@@ -1,4 +1,4 @@
-const db = require('../../DB/mysql');
+/*const db = require('../../DB/dbconnect');
 
 const TABLA = 'video';
 
@@ -8,4 +8,4 @@ function todos(){
 }
 module.exports = {
     todos
-}
+}*/

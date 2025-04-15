@@ -15,3 +15,4 @@ exports.error= function(req, res, mensaje='Error interno', status=500){
         body: mensaje
     });
 }
+
