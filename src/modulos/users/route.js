@@ -4,61 +4,36 @@
     -> Una para obtener los videos a los que se les han dado like
     -> Una para obtener los vídeos a los que se les ha dada fav
 
-    function validateIdUser(req, res, next) {
-  if (!/^\d+$/.test(req.params.idUser)) {
-    return res.status(400).json({ error: 'idUser debe ser un número.' });
-  }
-  next();
+    
 }
-
-// Middleware para validar que username es una cadena (solo letras y números, por ejemplo)
-function validateUsername(req, res, next) {
-  if (!/^[a-zA-Z0-9]+$/.test(req.params.username)) {
-    return res.status(400).json({ error: 'username debe ser una cadena alfanumérica.' });
-  }
-  next();
-}
-
 */
 const express = require("express");
 const controller = require("./controller");
 const router = express.Router();
 const { authenticateToken } = require("../../auth/auth");
+const rateLimit = require("express-rate-limit");
 
-router.get("/", authenticateToken, (req, res) => {
-  controller.get().then((resultado) => {
-    res.json(resultado);
-  });
+const registerLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 3, // máximo 5 registros
+  message: {
+    status: 429,
+    message: "Demasiadas cuentas creadas desde esta IP. Intenta más tarde.",
+  },
 });
+// login, borrar token, crear token
+router.get("/", authenticateToken, controller.get);
 
-router.get("/id/:idUser", (req, res) => {
-  controller.getUser(req.params.idUser).then((resultado) => {
-    res.json(resultado);
-  });
-});
+// router.get("/id/:id", authenticateToken, controller.getUserById);
 
-router.get("/username/:username", (req, res) => {
-  controller.getUserByName(req.params.username).then((resultado) => {
-    res.json(resultado);
-  });
-});
+router.get("/:nickname", authenticateToken, controller.getUserByNick);
 
-router.post("/", (req, res) => {
-  const { username, email, password, profile_image } = req.body;
-  controller
-    .postUser(username, email, password, profile_image)
-    .then((resultado) => {
-      res.json(resultado);
-    });
-});
+router.get("/username/:username", authenticateToken, controller.getUserByName);
 
-router.put("/", (req, res) => {
-  const { username, password, profile_image, id } = req.body;
-  controller
-    .putUser(username, password, profile_image, id)
-    .then((resultado) => {
-      res.json(resultado);
-    });
-});
+router.post("/", registerLimiter, controller.postUser);
+
+router.put("/", authenticateToken, controller.putUser);
+
+router.delete("/", authenticateToken, controller.deleteUser);
 
 module.exports = router;

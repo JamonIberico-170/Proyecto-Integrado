@@ -7,8 +7,9 @@ USE tiktokdb;
 CREATE TABLE user (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(20) NOT NULL,
+    nickname varchar(20) NOT NULL,
     email VARCHAR(40) NOT NULL,
-    passwrd  VARCHAR(50) NOT NULL,
+    passwrd  VARCHAR(60) NOT NULL,
     profile_image VARCHAR(30),
     date_create TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     num_following INT DEFAULT 0,

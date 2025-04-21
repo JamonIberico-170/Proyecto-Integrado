@@ -117,3 +117,10 @@ BEGIN
     SET num_share = num_share - 1
     WHERE id = OLD.video_id;
 END;
+
+
+
+CREATE TRIGGER lowercase_nickname_before_insert
+BEFORE INSERT ON user
+FOR EACH ROW
+SET NEW.nickname = LOWER(NEW.nickname);

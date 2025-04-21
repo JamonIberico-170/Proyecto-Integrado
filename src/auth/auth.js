@@ -12,28 +12,26 @@ function authenticateToken(req, res, next) {
     if (err) {
       return res.status(403).json({ message: "Token inválido." });
     }
+    req.user = user;
+    next();
   });
-  next();
 }
 
-function createToken(res, req) {
-  console.log(req.body);
-  const { id, username } = req.body;
-
-  if (!id || !username) {
-    return res
-      .status(401)
-      .json({ message: "Nombre de usuario o id no proporcionados." });
+function createToken(data) {
+  const { id, nickname } = data;
+  if (!id || !nickname) {
+    return {
+      message: "Nickname o id no proporcionados.",
+      success: false,
+    };
   }
   const token = jwt.sign(
-    { userId: id, username: username },
+    { id: id, nickname: nickname, role: "user" },
     process.env.JWT_SECRET,
-    {
-      expiresIn: "7d", // Puede ser '1h', '7d', etc.
-    }
+    
   );
 
-  res.json({ message: "Autenticación exitosa", token: token });
+  return { message: "Autenticación exitosa", token: token };
 }
 
 module.exports = {

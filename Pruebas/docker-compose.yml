@@ -6,11 +6,12 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=tiktokdb
+    container_name: mysql-db
     ports:
       - 3306:3306
     volumes:
       - db_data:/var/lib/mysql
-  
+      - ../uploads:/app/uploads
   phpmyadmin:
     image: phpmyadmin
     environment:
