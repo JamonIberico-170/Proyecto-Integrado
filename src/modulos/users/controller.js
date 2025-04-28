@@ -3,6 +3,7 @@ const respuestas = require("../../red/respuestas");
 const utilities = require("../../utils/utils");
 const auth = require("../../auth/auth");
 
+//Utilizados en los endpoints
 async function get(req, res) {
   try {
     return res.json(await consultas.get());
@@ -205,6 +206,21 @@ async function deleteUser(req, res) {
   }
 }
 
+//Funciones no utilizadas en Endpoints
+
+async function getIdByNickname(nickname){
+  const validate = utilities.validateNickname(nickname);
+  if(validate)
+    return validate;
+  
+  try{
+    const resultado = await consultas.getIdByNickname(nickname);
+    return resultado;
+  }catch(error){
+    console.log(error);
+    return res.json({ message: "Error", success: false });
+  }
+}
 module.exports = {
   get,
   getUserByNick,
@@ -213,4 +229,5 @@ module.exports = {
   postUser,
   putUser,
   deleteUser,
+  getIdByNickname
 };

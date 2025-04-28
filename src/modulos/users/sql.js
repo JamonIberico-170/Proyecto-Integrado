@@ -34,6 +34,7 @@ function getUserByNick(nickname) {
     });
   });
 }
+
 function getUserByName(username, offset) {
   return new Promise((resolve, reject) => {
     const query = `SELECT * FROM user where username LIKE ? LIMIT 10 OFFSET ${offset}`;
@@ -41,10 +42,10 @@ function getUserByName(username, offset) {
     conexion.execute(query, [`%${username}%`], (error, result) => {
       if (error) reject(error);
       else resolve(result);
-      console.log(result);
     });
   });
 }
+
 function getPassword(nickname) {
   return new Promise((resolve, reject) => {
     const query = `SELECT passwrd FROM user where nickname = ?`;
@@ -67,8 +68,8 @@ function postUser(username, nickname, email, password, profile_image) {
       [username, nickname, email, password, profile_image || null],
       (error, result) => {
         if (error) {
-          reject(error);
           conexion.rollback();
+          reject(error);
         } else
           resolve({
             result,
@@ -107,6 +108,19 @@ function deleteUser(id) {
   });
 }
 
+//Métodos extras 
+
+function getIdByNickname(nickname){
+  return new Promise((resolve, reject) => {
+    const query = 'SELECT id FROM user WHERE nickname = ?';
+    conexion.execute(query, [nickname], (error, result) => {
+      if(error)
+        reject(error);
+      else 
+      resolve(result);
+    })
+  })
+}
 module.exports = {
   get,
   getUserByName,
@@ -115,4 +129,5 @@ module.exports = {
   putUser,
   deleteUser,
   getUserByNick,
+  getIdByNickname
 };

@@ -1,22 +1,12 @@
-/*const db = require('../../DB/dbconnect');
-
-const TABLA = 'video';
-
-
-function todos(){
-    return db.todos(TABLA);
-}
-module.exports = {
-    todos
-}*/
-
+const aux = require('./filesystem');
 const consultas = require("./sql");
 const respuestas = require("../../red/respuestas");
 const utilities = require("../../utils/utils");
 const auth = require("../../auth/auth");
-const fs = require("fs");
-const multer = require("multer");
-const path = require("path");
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+const { use } = require('./route');
 
 async function getRandomVideo(req, res) {
   try {
@@ -32,45 +22,50 @@ async function getRandomVideo(req, res) {
   }
 }
 
+async function getVideoById(req, res){
+  try{
+    const {id} = req.body;
+
+    const resultado = await consultas.getVideoById(id);
+    console.log(resultado);
+    return res.json(resultado);
+  }catch(error){
+    console.log(error);
+    return res.json({ message: "Error", success: false });
+  }
+}
+
+async function getVideoByURL(url){
+  try{
+    const {url} = req.body;
+    const resultado = await consultas.getVideoByURL(url);
+    return res.json()
+  }catch(error){
+    console.log(error);
+    return res.json({ message: "Error", success: false });
+  }
+}
+
+
 async function postVideo(req, res) {
   try {
-    const { nickname } = req.body;
-    console.log(req.body);
-    const uploadPath = path.join(__dirname, `uploads/${nickname}/`);
+    const {thumbnail, user_id, title} = req.body;
+    const url = utilities.generateURL(req.file.path);
 
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath);
-    }
+    console.log({thumbnail, user_id, title, url});
+    const resultado = await consultas.postVideo(url, thumbnail, user_id, title);
     
-
-    const storage = multer.diskStorage({
-      destination: function (req, file, cb) {
-        cb(null, `uploads/${nickname}/`);
-      },
-      filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-        const ext = path.extname(file.originalname);
-        cb(null, file.fieldname + "-" + uniqueSuffix + ext); //¿Cómo quedaría? : NombreDelVideo-FechaActual-NúmeroAleatorio.ExtensiónDelArchivo
-      },
-    });
-
-    const upload = multer({ storage: storage }).single("video");
-
-    // Ahora ejecutamos el middleware pasando req, res y cb
-    upload(req, res, function (err) {
-      if (err) {
-        console.error(err);
-        return res.status(500).send("Error al subir el video");
-      }
-
-      console.log("Archivo subido a:", req.file.path);
-      res.status(200).send("Video subido correctamente");
-    });
+    if(resultado)
+      return res.json({message: "Video subido con éxito.", success: true, resultado})
+    else 
+      return res.json({message : "Error al subir el vídeo.", success : false, resultado});
+    
   } catch (error) {
     console.log(error);
   }
 }
 
 module.exports = {
-  postVideo,
+  getVideoById,
+  postVideo
 };

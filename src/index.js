@@ -1,7 +1,10 @@
 const app = require("./app");
+const express = require("express");
 const { createPool } = require("mysql2/promise");
 const video = require("./modulos/videos/route");
 const user = require("./modulos/users/route");
+const shared = require("./modulos/share/route");
+const path = require("path");
 const config = require("./config");
 
 const bodyParser = require("body-parser");
@@ -19,7 +22,7 @@ app.use(bodyParser.json());
 
 app.use("/api/user", user);
 app.use("/api/video", video);
-
+app.use("/api/share", shared);
 app.get("/world", (req, res) => {
   res.send("Hello World");
 });
@@ -29,8 +32,7 @@ app.get("/time", async (req, res) => {
   res.json(result[0]);
 });
 
-app.post("/register", (req, res) => {
-});
+app.post("/register", (req, res) => {});
 
 app.get("/login", (req, res) => {
   auth.authenticateToken(req, res);

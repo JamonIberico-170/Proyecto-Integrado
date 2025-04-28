@@ -196,8 +196,14 @@ async function uploadVideo(req, res) {
   upload.single('video');
 }
 
-async function searchVideo(req, res){
+function generateURL(fullPath) {
+  const normalizedPath = path.normalize(fullPath);
 
+  const parts = normalizedPath.split(path.sep); //Te hace una lista con cada uno de los cachitos de la ruta
+
+  const relativeParts = parts.slice(parts.indexOf('uploads')); //Nos quedamos desde uploads hacia adelante
+
+  return relativeParts.join('/'); //Reconstruímos la ruta añadiendo / entre cada elemento de la lista
 }
 module.exports = {
   userExist,
@@ -208,4 +214,5 @@ module.exports = {
   verifyEmail,
   uploadVideo,
   validateNickname,
+  generateURL
 };

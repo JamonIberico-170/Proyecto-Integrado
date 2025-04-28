@@ -1,5 +1,5 @@
+DROP DATABASE IF EXISTS tiktokdb;
 CREATE DATABASE tiktokdb;
-
 USE tiktokdb;
 
 
@@ -7,7 +7,7 @@ USE tiktokdb;
 CREATE TABLE user (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(20) NOT NULL,
-    nickname varchar(20) NOT NULL,
+    nickname VARCHAR(20) NOT NULL,
     email VARCHAR(40) NOT NULL,
     passwrd  VARCHAR(60) NOT NULL,
     profile_image VARCHAR(30),
@@ -31,8 +31,9 @@ CREATE TABLE follower (
 CREATE TABLE video (
     id INT AUTO_INCREMENT PRIMARY KEY,
     url VARCHAR(100) NOT NULL,
+    thumbnail VARCHAR(100) NOT NULL,
     user_id INT NOT NULL,
-    title VARCHAR(40) NOT NULL,
+    title VARCHAR(40),
     num_comment INT DEFAULT 0,
     num_likes INT DEFAULT 0,
     num_fav INT DEFAULT 0,
