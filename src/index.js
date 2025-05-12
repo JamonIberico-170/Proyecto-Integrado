@@ -4,6 +4,8 @@ const { createPool } = require("mysql2/promise");
 const video = require("./modulos/videos/route");
 const user = require("./modulos/users/route");
 const shared = require("./modulos/share/route");
+const like = require("./modulos/like/route");
+const fav = require("./modulos/fav/route");
 const path = require("path");
 const config = require("./config");
 
@@ -23,6 +25,9 @@ app.use(bodyParser.json());
 app.use("/api/user", user);
 app.use("/api/video", video);
 app.use("/api/share", shared);
+app.use("/api/like", like);
+app.use("/api/fav", fav);
+
 app.get("/world", (req, res) => {
   res.send("Hello World");
 });

@@ -26,14 +26,22 @@ router.get("/", authenticateToken, controller.get);
 
 // router.get("/id/:id", authenticateToken, controller.getUserById);
 
-router.get("/:nickname", authenticateToken, controller.getUserByNick);
+router.get("/nickname", authenticateToken, controller.getUserByNick);
 
-router.get("/username/:username", authenticateToken, controller.getUserByName);
+router.get("/username", authenticateToken, controller.getUserByName);
+
+router.get("/following",  controller.getFollowingUsers);
+
+router.get("/followers",  controller.getFollowers);
 
 router.post("/", registerLimiter, controller.postUser);
 
+router.post("/follow", authenticateToken, controller.postFollow);
+router.post("/unfollow", authenticateToken, controller.postUnfollow);
+
 router.put("/", authenticateToken, controller.putUser);
 
+//Hacer
 router.delete("/", authenticateToken, controller.deleteUser);
 
 module.exports = router;

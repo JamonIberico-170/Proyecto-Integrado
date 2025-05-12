@@ -109,7 +109,6 @@ function validateName(username) {
 function validateNickname(username) {
   const isInvalidCharacters = !/^@[a-zA-Z0-9]+$/.test(username);
   const isTooLong = username.length > 19;
-
   if (isInvalidCharacters || isTooLong) {
     return {
       message: "El nickname no cumple con el estándar preestablecido.",
@@ -205,6 +204,17 @@ function generateURL(fullPath) {
 
   return relativeParts.join('/'); //Reconstruímos la ruta añadiendo / entre cada elemento de la lista
 }
+
+function randomURL() {
+  const caracteres = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let resultado = '';
+  for (let i = 0; i < 9; i++) {
+    const indiceAleatorio = Math.floor(Math.random() * caracteres.length);
+    resultado += caracteres[indiceAleatorio];
+  }
+  return resultado;
+}
+
 module.exports = {
   userExist,
   createHash,
@@ -214,5 +224,6 @@ module.exports = {
   verifyEmail,
   uploadVideo,
   validateNickname,
-  generateURL
+  generateURL,
+  randomURL
 };

@@ -25,7 +25,9 @@ async function getRandomVideo(req, res) {
 async function getVideoById(req, res){
   try{
     const {id} = req.body;
-
+    if(!id)
+      return res.json({message: "No se ha encontrado el id", success : false});
+    
     const resultado = await consultas.getVideoById(id);
     console.log(resultado);
     return res.json(resultado);
@@ -37,7 +39,7 @@ async function getVideoById(req, res){
 
 async function getVideoByURL(url){
   try{
-    const {url} = req.body;
+    const {url} = req.query;
     const resultado = await consultas.getVideoByURL(url);
     return res.json()
   }catch(error){
@@ -49,11 +51,14 @@ async function getVideoByURL(url){
 
 async function postVideo(req, res) {
   try {
-    const {thumbnail, user_id, title} = req.body;
-    const url = utilities.generateURL(req.file.path);
+    const {title} = req.body;
+    const user_id = req.user.id;
+    const urlVideo = utilities.generateURL(req.files["video"][0].path);
+    
+    const urlThumbnail = req.files["thumbnail"] ? utilities.generateURL(req.files["thumbnail"][0].path) : undefined;
 
-    console.log({thumbnail, user_id, title, url});
-    const resultado = await consultas.postVideo(url, thumbnail, user_id, title);
+    console.log({user_id, title, urlVideo, urlThumbnail});
+    const resultado = await consultas.postVideo(urlVideo, urlThumbnail, user_id, title);
     
     if(resultado)
       return res.json({message: "Video subido con éxito.", success: true, resultado})
@@ -65,7 +70,29 @@ async function postVideo(req, res) {
   }
 }
 
+async function deleteVideo(req, res){
+  try{
+    const {id} = req.body;
+    const userid = req.user.id;
+
+    if(!id)
+      return res.json({message : "No se ha encontrado el vídeo.", success : false});
+    if(!userid)
+      return res.json({message : "No se ha encontrado el usuario.", success : false});
+
+    const resultado = await consultas.deleteVideo(id, userid)
+    req.url.url = resultado[0].url;
+    aux.deleteVideo(resultado[0].url);
+    return res.json({s : "Video eliminado con éxito.", success : true});
+    //deleteVideo
+    
+  }catch(error){
+
+  }
+}
 module.exports = {
   getVideoById,
-  postVideo
+  postVideo,
+  getVideoByURL,
+  deleteVideo
 };

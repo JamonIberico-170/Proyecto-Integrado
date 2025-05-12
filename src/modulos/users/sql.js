@@ -46,14 +46,36 @@ function getUserByName(username, offset) {
   });
 }
 
+function getFollowingUsers(nickname) {
+  return new Promise((resolve, reject) => {
+    const subquery = "(SELECT id FROM user where nickname = ?)";
+    const query = `SELECT user.username FROM follower LEFT JOIN user ON user.id = follower.user_id  WHERE follower_id = (SELECT id FROM user where nickname = ?)`;
+
+    conexion.execute(query, [nickname], (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    });
+  });
+}
+
+function getFollowers(nickname) {
+  return new Promise((resolve, reject) => {
+    const subquery = "(SELECT id FROM user where nickname = ?)";
+    const query = `SELECT user.username FROM follower LEFT JOIN user ON user.id = follower.follower_id WHERE user_id = (SELECT id FROM user where nickname = ?)`;
+    conexion.execute(query, [nickname], (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    });
+  });
+}
+
 function getPassword(nickname) {
   return new Promise((resolve, reject) => {
     const query = `SELECT passwrd FROM user where nickname = ?`;
 
     conexion.execute(query, [nickname], (error, result) => {
       if (error) reject(error);
-      else 
-        resolve(result);
+      else resolve(result);
     });
   });
 }
@@ -80,6 +102,45 @@ function postUser(username, nickname, email, password, profile_image) {
   });
 }
 
+function postFollow(followerid, nickname) {
+  return new Promise((resolve, reject) => {
+    const auxQuery = "SELECT id FROM user WHERE nickname = ?";
+    
+    conexion.execute(auxQuery, [nickname], (error, result) => {
+      if (error) reject(error);
+      else {
+        const userid = result[0].id;
+        const query = "INSERT INTO follower (user_id, follower_id) VALUES(?,?)";
+        conexion.execute(query, [userid, followerid], (error, result) => {
+          if (error) {
+            conexion.rollback();
+            reject(error);
+          } else resolve(result);
+        });
+      }
+    });
+  });
+}
+
+function postUnfollow(followerid, nickname) {
+  return new Promise((resolve, reject) => {
+    const auxQuery = "SELECT id FROM user WHERE nickname = ?";
+    
+    conexion.execute(auxQuery, [nickname], (error, result) => {
+      if (error) reject(error);
+      else {
+        const userid = result[0].id;
+        const query = "DELETE FROM follower WHERE user_id = ? AND follower_id = ?";
+        conexion.execute(query, [userid, followerid], (error, result) => {
+          if (error) {
+            conexion.rollback();
+            reject(error);
+          } else resolve(result);
+        });
+      }
+    });
+  });
+}
 //Métodos put para la tabla user
 
 function putUser(parametros, consultas) {
@@ -108,18 +169,16 @@ function deleteUser(id) {
   });
 }
 
-//Métodos extras 
+//Métodos extras
 
-function getIdByNickname(nickname){
+function getIdByNickname(nickname) {
   return new Promise((resolve, reject) => {
-    const query = 'SELECT id FROM user WHERE nickname = ?';
+    const query = "SELECT id FROM user WHERE nickname = ?";
     conexion.execute(query, [nickname], (error, result) => {
-      if(error)
-        reject(error);
-      else 
-      resolve(result);
-    })
-  })
+      if (error) reject(error);
+      else resolve(result);
+    });
+  });
 }
 module.exports = {
   get,
@@ -129,5 +188,9 @@ module.exports = {
   putUser,
   deleteUser,
   getUserByNick,
-  getIdByNickname
+  getIdByNickname,
+  getFollowingUsers,
+  getFollowers,
+  postFollow,
+  postUnfollow
 };

@@ -3,7 +3,6 @@ const respuestas = require("../../red/respuestas");
 const utilities = require("../../utils/utils");
 const auth = require("../../auth/auth");
 const controller2 = require("../users/controller");
-const { off } = require("../../app");
 
 async function getSharedByUser(req, res) {
   try {
@@ -15,7 +14,6 @@ async function getSharedByUser(req, res) {
         message: "No se ha proporcionado ningún nickname.",
         success: false,
       });
-    const resultado = await controller2.getIdByNickname(nickname);
 
     if (offset === undefined) parsedOffset = parseInt(0, 10);
     else parsedOffset = parseInt(offset, 10);
@@ -29,25 +27,71 @@ async function getSharedByUser(req, res) {
       );
     }
     //#endregion
+    
 
-    if (resultado.length == 0)
-      return res.json({
-        message: "No se ha encontrado ningún usuario con ese nickname.",
-        success: true,
-      });
-    const { id } = resultado;
+    const sharedVideos = await consultas.getShared(nickname, offset);
 
-    const sharedVideos = await consultas.getShared(id, offset);
-
-    //Aquí iría la función que te devuelve la miniatura del video y el id con el url del video
-    return res.json(resultado);
+    return res.json(sharedVideos);
   } catch (error) {
     console.log(error);
   }
 }
 
-async function getSharedByVideo(req, res) {}
+async function postShared(req, res) {
+  try {
+    const {userid: targetid, videoid } = req.body;
+    const isAdmin = req.user.role === "admin";
+
+   const userid = isAdmin ? targetid : req.user.id;
+
+    console.log(req.body);
+    if (!userid || !videoid) {
+      return res.json({
+        message: "No se ha encontrado el video o el usuario.",
+        success: false,
+      });
+    }
+
+    const resultado = await consultas.postShared(userid, videoid);
+    if (resultado)
+      return res.json({ message: "Se ha añadido con éxito.", success: true });
+    else return res.json({ message: "Ha habido un problema.", success: false });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function deleteShared(req, res){
+    try{
+        const {videoid} = req.body;
+        const userid = req.user.id;
+
+        if(!videoid){
+            return res.json({
+                message: "No se ha encontrado el id del video.",
+                success: false,
+              });
+        }
+        if(!userid){
+            return res.json({
+                message: "No se ha encontrado el id del usuario.",
+                success: false,
+              });
+        }
+
+        const resultado = await consultas.deleteShared(userid, videoid);
+
+        if(resultado)
+            return res.json({message: "Se ha eliminado con éxito.", success : true});
+        else return res.json({message: "Error.", success: false});
+
+    }catch(error){
+        console.log(error);
+    }
+}
 
 module.exports = {
   getSharedByUser,
+  postShared,
+  deleteShared
 };

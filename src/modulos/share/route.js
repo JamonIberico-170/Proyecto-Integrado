@@ -6,6 +6,7 @@ const rateLimit = require("express-rate-limit");
 
 
 router.get('/', controller.getSharedByUser);
-router.post('/');
+router.post('/', authenticateToken, controller.postShared);
+router.delete('/', authenticateToken, controller.deleteShared)
 
 module.exports = router;

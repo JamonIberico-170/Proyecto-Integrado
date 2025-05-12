@@ -71,19 +71,19 @@ CREATE TABLE fav (
 
 -- Foreing Keys
 
-ALTER TABLE follower ADD CONSTRAINT fk_follower_user FOREIGN KEY (user_id) REFERENCES user(id);
-ALTER TABLE follower ADD CONSTRAINT fk_follower_follower FOREIGN KEY (follower_id) REFERENCES user(id);
+ALTER TABLE follower ADD CONSTRAINT fk_follower_user FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE;
+ALTER TABLE follower ADD CONSTRAINT fk_follower_follower FOREIGN KEY (follower_id) REFERENCES user(id) ON DELETE CASCADE;
 
-ALTER TABLE video ADD CONSTRAINT fk_video_userid FOREIGN KEY (user_id) REFERENCES user(id);
+ALTER TABLE video ADD CONSTRAINT fk_video_userid FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE;
 
-ALTER TABLE comment ADD CONSTRAINT fk_comment_userid FOREIGN KEY (user_id) REFERENCES user(id);
-ALTER TABLE comment ADD CONSTRAINT fk_comment_videoid FOREIGN KEY (video_id) REFERENCES video(id);
+ALTER TABLE comment ADD CONSTRAINT fk_comment_userid FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE;
+ALTER TABLE comment ADD CONSTRAINT fk_comment_videoid FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE;
 
-ALTER TABLE likes ADD CONSTRAINT fk_likes_userid FOREIGN KEY (user_id) REFERENCES user(id);
-ALTER TABLE likes ADD CONSTRAINT fk_likes_videoid FOREIGN KEY (video_id) REFERENCES video(id);
+ALTER TABLE likes ADD CONSTRAINT fk_likes_userid FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE;
+ALTER TABLE likes ADD CONSTRAINT fk_likes_videoid FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE;
 
-ALTER TABLE share ADD CONSTRAINT fk_share_userid FOREIGN KEY (user_id) REFERENCES user(id);
-ALTER TABLE share ADD CONSTRAINT fk_share_videoid FOREIGN KEY (video_id) REFERENCES video(id);
+ALTER TABLE share ADD CONSTRAINT fk_share_userid FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE;
+ALTER TABLE share ADD CONSTRAINT fk_share_videoid FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE;
 
-ALTER TABLE fav ADD CONSTRAINT fk_fav_userid FOREIGN KEY (user_id) REFERENCES user(id);
-ALTER TABLE fav ADD CONSTRAINT fk_fav_videoid FOREIGN KEY (video_id) REFERENCES video(id);
+ALTER TABLE fav ADD CONSTRAINT fk_fav_userid FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE;
+ALTER TABLE fav ADD CONSTRAINT fk_fav_videoid FOREIGN KEY (video_id) REFERENCES video(id) ON DELETE CASCADE ;

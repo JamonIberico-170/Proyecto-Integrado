@@ -46,8 +46,28 @@ function postVideo(url, thumbnail, user_id, title) {
   });
 }
 
+function deleteVideo(videoid, userid){
+  return new Promise((resolve, reject)=> {
+    const query2 = "SELECT url FROM video WHERE id = ?";
+    var aux;
+    conexion.execute(query2, [videoid], (error, result)=> {
+      if(error)reject(error);
+        else aux = result;
+      }
+    );
+    const query = "DELETE FROM video WHERE id = ? AND user_id = ?";
+    conexion.execute(query, [videoid, userid], (error, result)=>{
+      if(error){
+        conexion.rollback();
+        reject(error);
+      }else
+      resolve(aux);
+    });
+  });
+}
 module.exports = {
   getRandomVideo,
   getVideoById,
-  postVideo
+  postVideo,
+  deleteVideo
 };

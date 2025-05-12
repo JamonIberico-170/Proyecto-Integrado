@@ -32,7 +32,14 @@ async function get(req, res) {
 //   }
 // }
 async function getUserByNick(req, res) {
-  const { nickname } = req.params;
+  const { nickname } = req.query;
+
+  if (!nickname)
+    return res.json({
+      message: "No se ha encontrado el nickname.",
+      success: false,
+    });
+
   const validate = utilities.validateNickname(nickname);
   if (validate) return res.json(validate);
   try {
@@ -51,7 +58,15 @@ async function getUserByNick(req, res) {
   }
 }
 async function getUserByName(req, res) {
-  const { username, offset } = req.body;
+  const { username, offset } = req.query;
+
+  // if (!username)
+  //   return res.json({
+  //     message: "No se ha encontrado el username.",
+  //     success: false,
+  //   });
+
+  console.log(`El username ${username}`);
   if (offset === undefined) parsedOffset = parseInt(0, 10);
   else parsedOffset = parseInt(offset, 10);
 
@@ -79,6 +94,57 @@ async function getUserByName(req, res) {
   }
 }
 
+async function getFollowingUsers(req, res) {
+  try {
+    const { nickname } = req.body;
+
+    if (!nickname)
+      return res.json({
+        message: "No se ha encontrado el nickname.",
+        success: false,
+      });
+
+    const validate = utilities.validateNickname(nickname);
+    if (validate) return res.json(validate);
+
+    const resultado = await consultas.getFollowingUsers(nickname);
+    if (resultado.length > 0) return res.json(resultado);
+    else
+      return res.json({
+        message: "No sigues a nadie, LOL",
+        success: true,
+      });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function getFollowers(req, res) {
+  try {
+    const { nickname } = req.body;
+
+    if (!nickname)
+      return res.json({
+        message: "No se ha encontrado el nickname.",
+        success: false,
+      });
+
+    const validate = utilities.validateNickname(nickname);
+    if (validate) return res.json(validate);
+
+    const resultado = await consultas.getFollowers(nickname);
+      console.log(resultado);
+    if (resultado.length > 0) return res.json(resultado);
+    else
+      return res.json({
+        message: "No te sigue nadie, xD",
+        success: true,
+      });
+  } catch (error) {
+    console.log(error);
+  }
+}
+
 async function postUser(req, res) {
   const { username, nickname, email, password, profile_image } = req.body;
 
@@ -89,9 +155,9 @@ async function postUser(req, res) {
     if (validate) return res.json(validate);
     validate = utilities.validateNickname(nickname.toLowerCase());
     if (validate) return res.json(validate);
-    validate = await utilities.verifyEmail(email);    
+    validate = await utilities.verifyEmail(email);
     if (!validate.success) return res.json(validate);
-    
+
     //Comprueba si el nombre de usuario o el correo están en uso.
     const reply = await utilities.userExist(nickname.toLowerCase(), email);
     if (!reply.success) return res.json(reply);
@@ -107,16 +173,59 @@ async function postUser(req, res) {
     );
 
     if (resultado) {
-      
       const token = auth.createToken(resultado.data);
 
       return res.json(token);
-    }else{
-      return res.json({message: "No se pudo registrar el usuario.", success: false})
+    } else {
+      return res.json({
+        message: "No se pudo registrar el usuario.",
+        success: false,
+      });
     }
   } catch (error) {
     console.log(error);
     return res.json({ message: "Error", success: false });
+  }
+}
+
+
+async function postFollow(req, res){
+  try{
+    const id = req.user.id;
+    const {nickname} = req.body;
+    console.log(`id : ${id} nickname: ${nickname}`);
+    if(!id)
+      return res.json({message : "No se ha otorgado ningún usuario.", success : false});
+
+    if(!nickname)
+      return res.json({message : "No se ha proporcionado un usuario al que seguir.", success : false});
+
+    const resultado = await consultas.postFollow(id, nickname);
+
+    if(resultado)
+      return res.json({message : "Se ha seguido al usuario con éxito.", success : true});
+  }catch(error){
+    console.log(error);
+  }
+}
+
+async function postUnfollow(req, res){
+  try{
+    const id = req.user.id;
+    const {nickname} = req.body;
+    console.log(`id : ${id} nickname: ${nickname}`);
+    if(!id)
+      return res.json({message : "No se ha otorgado ningún usuario.", success : false});
+
+    if(!nickname)
+      return res.json({message : "No se ha proporcionado un usuario al que seguir.", success : false});
+
+    const resultado = await consultas.postUnfollow(id, nickname);
+
+    if(resultado)
+      return res.json({message : "Se ha seguido al usuario con éxito.", success : true});
+  }catch(error){
+    console.log(error);
   }
 }
 
@@ -139,7 +248,6 @@ async function putUser(req, res) {
   const isAdmin = req.user.role === "admin";
 
   const id = isAdmin ? targetId : req.user.id;
-  console.log(`Este es el id ${id}`);
   const nickname = isAdmin ? targetNickname : req.user.nickname;
 
   if (!username && !password && !profile_image) {
@@ -208,15 +316,14 @@ async function deleteUser(req, res) {
 
 //Funciones no utilizadas en Endpoints
 
-async function getIdByNickname(nickname){
+async function getIdByNickname(nickname) {
   const validate = utilities.validateNickname(nickname);
-  if(validate)
-    return validate;
-  
-  try{
+  if (validate) return validate;
+
+  try {
     const resultado = await consultas.getIdByNickname(nickname);
     return resultado;
-  }catch(error){
+  } catch (error) {
     console.log(error);
     return res.json({ message: "Error", success: false });
   }
@@ -229,5 +336,9 @@ module.exports = {
   postUser,
   putUser,
   deleteUser,
-  getIdByNickname
+  getIdByNickname,
+  getFollowingUsers,
+  getFollowers,
+  postFollow,
+  postUnfollow
 };
