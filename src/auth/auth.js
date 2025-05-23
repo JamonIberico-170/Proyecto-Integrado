@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 
 function authenticateToken(req, res, next) {
   const token = req.header("Authorization")?.replace("Bearer ", "");
-
+  
   if (!token) {
     return res
       .status(401)
@@ -19,6 +19,7 @@ function authenticateToken(req, res, next) {
 
 function createToken(data) {
   const { id, nickname } = data;
+  console.log(`id : ${id}, nickname : ${nickname}`);
   if (!id || !nickname) {
     return {
       message: "Nickname o id no proporcionados.",
@@ -31,7 +32,7 @@ function createToken(data) {
     
   );
 
-  return { message: "Autenticación exitosa", token: token };
+  return { message: "Autenticación exitosa", success : true, token: token };
 }
 
 module.exports = {

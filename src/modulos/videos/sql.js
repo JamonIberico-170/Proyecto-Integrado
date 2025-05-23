@@ -3,9 +3,13 @@ const conexion = dbconnect.conexion;
 
 //Métodos gets para la tabla video
 
-function getRandomVideo() {
+function get5RandomVideo() {
   return new Promise((resolve, reject) => {
-    const query = "SELECT * FROM video";
+    const query =
+      "SELECT video.id as video_id, video.url as url, video.thumbnail, video.title," +
+      "video.num_comment as comments, video.num_likes as likes, video.num_fav as favs, video.num_share as shares," +
+      "user.id as user_id, user.username, user.profile_image as image " +
+      "FROM user LEFT JOIN video ON video.user_id = user.id ORDER BY RAND() LIMIT 6";
     conexion.query(query, (error, result) => {
       if (error) reject(error);
       else resolve(result);
@@ -13,12 +17,16 @@ function getRandomVideo() {
   });
 }
 
-function getVideoById(videoID) {
+function getVideoById(videoID, userID) {
   return new Promise((resolve, reject) => {
     const query =
-      "SELECT video.user_id as video_id, video.url as url, video.thumbnail, video.title," +
+      "SELECT video.id as video_id, video.url as url, video.thumbnail, video.title," +
       "video.num_comment as comments, video.num_likes as likes, video.num_fav as favs, video.num_share as shares," +
-      "user.id as user_id, user.username, user.profile_image as image " +
+      "user.id as user_id, user.username, user.profile_image as image, " +
+      "CASE WHEN EXISTS ( SELECT 1 FROM likes  WHERE likes.user_id = ? AND likes.video_id = video.id ) THEN TRUE "+
+      "ELSE FALSE END AS isLiked, "+
+      "CASE WHEN EXISTS ( SELECT 1 FROM fav  WHERE fav.user_id = ? AND fav.video_id = video.id ) THEN TRUE "+
+      "ELSE FALSE END AS isSaved "+
       "FROM user LEFT JOIN video ON video.user_id = user.id WHERE video.id = ?";
 
     conexion.query(query, [videoID], (error, result) => {
@@ -66,7 +74,7 @@ function deleteVideo(videoid, userid){
   });
 }
 module.exports = {
-  getRandomVideo,
+  get5RandomVideo,
   getVideoById,
   postVideo,
   deleteVideo

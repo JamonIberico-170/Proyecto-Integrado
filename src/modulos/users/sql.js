@@ -14,16 +14,17 @@ function get() {
   });
 }
 
-// function getUser(id) {
-//   return new Promise((resolve, reject) => {
-//     const query =
-//       "SELECT username, nickname, profile_image, num_followers, num_following FROM user WHERE id = ?";
-//     conexion.execute(query, [id], (error, result) => {
-//       if (error) reject(error);
-//       else resolve(result);
-//     });
-//   });
-// }
+function getUser(id) {
+  return new Promise((resolve, reject) => {
+    const query =
+      "SELECT username, nickname, profile_image, num_followers, num_following FROM user WHERE id = ?";
+    conexion.execute(query, [id], (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    });
+  });
+}
+
 function getUserByNick(nickname) {
   return new Promise((resolve, reject) => {
     const query =
@@ -46,6 +47,21 @@ function getUserByName(username, offset) {
   });
 }
 
+function getUploadVideo(nickname, offset = 0) {
+  return new Promise((resolve, reject) => {
+    const query =
+      "SELECT video.id as video_id, video.url as url, video.thumbnail, video.title," +
+      "video.num_comment as comments, video.num_likes as likes, video.num_fav as favs, video.num_share as shares," +
+      "user.username, user.profile_image as image " +
+      "FROM video " +
+      "LEFT JOIN user ON video.user_id = user.id " +
+      `WHERE user.nickname = ? LIMIT 10 OFFSET ${offset}`;
+    conexion.execute(query, [nickname], (error, result) => {
+      if (error) reject(error);
+      else resolve(result);
+    });
+  });
+}
 function getFollowingUsers(nickname) {
   return new Promise((resolve, reject) => {
     const subquery = "(SELECT id FROM user where nickname = ?)";
@@ -71,11 +87,13 @@ function getFollowers(nickname) {
 
 function getPassword(nickname) {
   return new Promise((resolve, reject) => {
-    const query = `SELECT passwrd FROM user where nickname = ?`;
+    const query = `SELECT id, passwrd FROM user where nickname = ?`;
 
     conexion.execute(query, [nickname], (error, result) => {
       if (error) reject(error);
-      else resolve(result);
+      else {console.log(result);
+        resolve(result)};
+
     });
   });
 }
@@ -105,16 +123,19 @@ function postUser(username, nickname, email, password, profile_image) {
 function postFollow(followerid, nickname) {
   return new Promise((resolve, reject) => {
     const auxQuery = "SELECT id FROM user WHERE nickname = ?";
-    
+
     conexion.execute(auxQuery, [nickname], (error, result) => {
       if (error) reject(error);
       else {
+        if (result <= 0)
+          return reject({ message: "No existe un usuario con ese nickname." });
         const userid = result[0].id;
         const query = "INSERT INTO follower (user_id, follower_id) VALUES(?,?)";
         conexion.execute(query, [userid, followerid], (error, result) => {
           if (error) {
             conexion.rollback();
             reject(error);
+            next();
           } else resolve(result);
         });
       }
@@ -125,12 +146,13 @@ function postFollow(followerid, nickname) {
 function postUnfollow(followerid, nickname) {
   return new Promise((resolve, reject) => {
     const auxQuery = "SELECT id FROM user WHERE nickname = ?";
-    
+
     conexion.execute(auxQuery, [nickname], (error, result) => {
       if (error) reject(error);
       else {
         const userid = result[0].id;
-        const query = "DELETE FROM follower WHERE user_id = ? AND follower_id = ?";
+        const query =
+          "DELETE FROM follower WHERE user_id = ? AND follower_id = ?";
         conexion.execute(query, [userid, followerid], (error, result) => {
           if (error) {
             conexion.rollback();
@@ -182,8 +204,10 @@ function getIdByNickname(nickname) {
 }
 module.exports = {
   get,
+  getUser,
   getUserByName,
   getPassword,
+  getUploadVideo,
   postUser,
   putUser,
   deleteUser,
@@ -192,5 +216,5 @@ module.exports = {
   getFollowingUsers,
   getFollowers,
   postFollow,
-  postUnfollow
+  postUnfollow,
 };

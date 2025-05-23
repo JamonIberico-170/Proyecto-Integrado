@@ -1,13 +1,9 @@
 const consultas = require("./sql");
-const respuestas = require("../../red/respuestas");
-const utilities = require("../../utils/utils");
-const auth = require("../../auth/auth");
-const controller2 = require("../users/controller");
+const logger = require("../../utils/logger");
 
 async function getLikedByUser(req, res) {
   try {
     const { nickname, offset } = req.body;
-
     //#region  Verifica las variables
     if (!nickname)
       return res.json({
@@ -26,22 +22,27 @@ async function getLikedByUser(req, res) {
         )
       );
     }
-    //#endregion    
+    //#endregion
 
     const likedVideos = await consultas.getLiked(nickname, offset);
+    //logger.info(JSON.stringify(likedVideos));
 
     return res.json(likedVideos);
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({
+      message: "Error al obtener de Me gustan.",
+      success: false,
+    });
   }
 }
 
 async function postLiked(req, res) {
   try {
-    const {userid: targetid, videoid } = req.body;
+    const { userid: targetid, videoid } = req.body;
     const isAdmin = req.user.role === "admin";
 
-   const userid = isAdmin ? targetid : req.user.id;
+    const userid = isAdmin ? targetid : req.user.id;
 
     if (!userid || !videoid) {
       return res.json({
@@ -55,41 +56,58 @@ async function postLiked(req, res) {
       return res.json({ message: "Se ha añadido con éxito.", success: true });
     else return res.json({ message: "Ha habido un problema.", success: false });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({
+      message: "Error al añadir a Me gustan.",
+      success: false,
+    });
   }
 }
 
-async function deleteLiked(req, res){
-    try{
-        const {videoid} = req.body;
-        const userid = req.user.id;
+async function deleteLiked(req, res) {
+  try {
+    const { videoId } = req.query;
+    const userid = req.user.id;
+    console.log("hola");
+    logger.info(
+      `Trying delete a like. User : ${userid} . Video : ${videoId} .`
+    );
 
-        if(!videoid){
-            return res.json({
-                message: "No se ha encontrado el id del video.",
-                success: false,
-              });
-        }
-        if(!userid){
-            return res.json({
-                message: "No se ha encontrado el id del usuario.",
-                success: false,
-              });
-        }
-
-        const resultado = await consultas.deleteLiked(userid, videoid);
-
-        if(resultado)
-            return res.json({message: "Se ha eliminado con éxito.", success : true});
-        else return res.json({message: "Error.", success: false});
-
-    }catch(error){
-        console.log(error);
+    if (!videoId) {
+      logger.warn("Video id is not found.");
+      return res.json({
+        message: "No se ha encontrado el id del video.",
+        success: false,
+      });
     }
+    if (!userid) {
+      logger.warn("User id is not found.");
+      return res.json({
+        message: "No se ha encontrado el id del usuario.",
+        success: false,
+      });
+    }
+
+    const resultado = await consultas.deleteLiked(userid, videoId);
+
+    if (resultado) {
+      logger.info("Like delete succesfully.");
+      return res.json({ message: "Se ha eliminado con éxito.", success: true });
+    } else {
+      logger.warn("Like couldn't be deleted.");
+      return res.json({ message: "Error.", success: false });
+    }
+  } catch (error) {
+    logger.error(error);
+    return res.json({
+      message: "Error al eliminar de Me gustan.",
+      success: false,
+    });
+  }
 }
 
 module.exports = {
   getLikedByUser,
   postLiked,
-  deleteLiked
+  deleteLiked,
 };

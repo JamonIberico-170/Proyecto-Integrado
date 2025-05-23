@@ -1,14 +1,13 @@
 const consultas = require("./sql");
-const respuestas = require("../../red/respuestas");
-const utilities = require("../../utils/utils");
-const auth = require("../../auth/auth");
-const { conexion } = require("../../DB/dbconnect");
+const logger = require("../../utils/logger");
 
 async function getCommentsVideo(req, res) {
   try {
-    const { videoid } = req.body;
-
+    
+    const { videoid, offset } = req.body;
+    var parsedOffset = 0;
     if (!videoid) {
+      logger.warn("No se ha encontrado el video.");
       return res.json({
         message: "No se ha encontrado el video",
         success: false,
@@ -20,17 +19,20 @@ async function getCommentsVideo(req, res) {
 
     //Si parsedOffset no es un número, devuelve un error y detiene la función.
     if (isNaN(parsedOffset) || parsedOffset < 0) {
+      logger.warn("El offset debe de ser un número entero válido y mayor o igual a 0.");
       return reject(
         new Error(
           "El offset debe ser un número entero válido y mayor o igual a 0."
         )
       );
     }
-    const resultado = await consultas.getCommentsVideo(videoid, offset);
+    const resultado = await consultas.getComments(videoid, parsedOffset);
 
+    console.log(resultado);
+    logger.info(resultado);
     return res.json(resultado);
   } catch (error) {
-    console.log(error);
+    logger.error(error);
     return res.json({
       message: "Error al obtener los comentarios.",
       success: false,
@@ -56,7 +58,7 @@ async function postComment(req, res) {
       });
     }
 
-    const resultado = await consultas.getComments();
+    const resultado = await consultas.postComments();
 
     if (!resultado)
       return res.json({
@@ -65,8 +67,8 @@ async function postComment(req, res) {
       });
     return res.json({ message: "Se ha comentado con éxito.", success: true });
   } catch (error) {
-    console.log(error);
-    conexion.rollback();
+    logger.error(error);
+    return res.json({ message: "Error al subir el comentario.", success: false });
   }
 }
 
@@ -89,7 +91,8 @@ async function deleteComment(req, res) {
       success: true,
     });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({ message: "Error al eliminar el comentario.", success: false });
   }
 }
 

@@ -63,10 +63,10 @@ async function postShared(req, res) {
 
 async function deleteShared(req, res){
     try{
-        const {videoid} = req.body;
+        const { videoId } = req.query;
         const userid = req.user.id;
 
-        if(!videoid){
+        if(!videoId){
             return res.json({
                 message: "No se ha encontrado el id del video.",
                 success: false,
@@ -79,7 +79,7 @@ async function deleteShared(req, res){
               });
         }
 
-        const resultado = await consultas.deleteShared(userid, videoid);
+        const resultado = await consultas.deleteShared(userid, videoId);
 
         if(resultado)
             return res.json({message: "Se ha eliminado con éxito.", success : true});

@@ -5,8 +5,8 @@ const { authenticateToken } = require("../../auth/auth");
 const rateLimit = require("express-rate-limit");
 
 
-router.get('/', controller.getSharedByUser);
+router.post('/', controller.getSharedByUser);
 router.post('/', authenticateToken, controller.postShared);
-router.delete('/', authenticateToken, controller.deleteShared)
+//router.delete('/', authenticateToken, controller.deleteShared)
 
 module.exports = router;

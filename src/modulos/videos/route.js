@@ -1,10 +1,12 @@
 const express = require("express");
 const controller = require("./controller");
 const controller2 = require("./filesystem");
+const likedController = require("./../like/controller");
+const favController = require("./../fav/controller");
 const router = express.Router();
 const { authenticateToken } = require("../../auth/auth");
-const path = require("path");
 const utilities = require("../../utils/utils");
+
 /*
     Rutas:
     -> Una para obtener un video en específico
@@ -16,14 +18,16 @@ const utilities = require("../../utils/utils");
 */
 // router.get('/', );
 
-router.get("/randomvideo", authenticateToken);
-router.get("/likedvideo", authenticateToken);
-router.get("/favvideo", authenticateToken);
+router.get("/randomvideo", controller.get5RandomVideo);
+// router.post("/likedvideo", likedController.getLikedByUser);
+// router.post("/favvideo", favController.getFavByUser);
 
-//Mirar si puedo pasar meta datos y videos al mismo tiempo
 router.get("/download", controller2.getVideo);
-router.get("/", controller.getVideoById);
+
+router.post("/", authenticateToken, controller.getVideoById);
+
 //router.get("/", controller2.getVideoURL);
+
 router.post(
   "/",
   authenticateToken,
@@ -36,6 +40,5 @@ router.post(
   controller.postVideo
 );
 
-//Hacer
 router.delete("/", authenticateToken, controller.deleteVideo);
 module.exports = router;

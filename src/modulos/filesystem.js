@@ -2,15 +2,19 @@ const fs = require("fs");
 const path = require("path");
 
 async function getImage(req, res) {
-  const { route } = req.query;
-  if (!route) {
+  const { url } = req.body;
+  console.log(`Esta es la url ${url}`);
+  if (!url) {
+    console.log("No se ha encontrado la ruta del archivo");
     return res.json({
       message: "No se ha encontrado la ruta del archivo",
       success: false,
     });
   }
 
-  const uploadPath = path.resolve(__dirname, "../../", route);
+  console.log("Entra al menos");
+
+  const uploadPath = path.resolve(__dirname, "../../", url);
   console.log(uploadPath);
 
   if (!uploadPath) {

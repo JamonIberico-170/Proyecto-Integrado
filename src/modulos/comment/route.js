@@ -4,7 +4,7 @@ const router = express.Router();
 const { authenticateToken } = require("../../auth/auth");
 const rateLimit = require("express-rate-limit");
 
-router.get('/', controller.getCommentsVideo);
+router.post('/comments', controller.getCommentsVideo);
 router.post('/', authenticateToken, controller.postComment);
 router.delete('/', authenticateToken, controller.deleteComment);
 

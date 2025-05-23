@@ -1,7 +1,5 @@
 const consultas = require("./sql");
-const respuestas = require("../../red/respuestas");
-const utilities = require("../../utils/utils");
-const auth = require("../../auth/auth");
+const logger = require("../../utils/logger");
 
 async function getFavByUser(req, res) {
   try {
@@ -38,7 +36,8 @@ async function getFavByUser(req, res) {
 
     return res.json(sharedVideos);
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({ message: "Error al obtener los favoritos", success: false });
   }
 }
 
@@ -61,16 +60,17 @@ async function postFav(req, res) {
       return res.json({ message: "Se ha añadido con éxito.", success: true });
     else return res.json({ message: "Ha habido un problema.", success: false });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({ message: "Error al añadir a favoritos.", success: false });
   }
 }
 
 async function deleteFav(req, res){
     try{
-        const {videoid} = req.body;
+       const { videoId } = req.query;
         const userid = req.user.id;
 
-        if(!videoid){
+        if(!videoId){
             return res.json({
                 message: "No se ha encontrado el id del video.",
                 success: false,
@@ -83,14 +83,15 @@ async function deleteFav(req, res){
               });
         }
 
-        const resultado = await consultas.deleteFav(userid, videoid);
+        const resultado = await consultas.deleteFav(userid, videoId);
 
         if(resultado)
             return res.json({message: "Se ha eliminado con éxito.", success : true});
         else return res.json({message: "Error.", success: false});
 
     }catch(error){
-        console.log(error);
+        logger.error(error);
+    return res.json({ message: "Error al borrar los favoritos", success: false });
     }
 }
 

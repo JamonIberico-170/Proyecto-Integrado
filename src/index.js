@@ -6,6 +6,7 @@ const user = require("./modulos/users/route");
 const shared = require("./modulos/share/route");
 const like = require("./modulos/like/route");
 const fav = require("./modulos/fav/route");
+const comment = require("./modulos/comment/route");
 const path = require("path");
 const config = require("./config");
 
@@ -28,6 +29,9 @@ app.use("/api/share", shared);
 app.use("/api/like", like);
 app.use("/api/fav", fav);
 
+app.use("/api/comment", comment);
+
+/*
 app.get("/world", (req, res) => {
   res.send("Hello World");
 });
@@ -35,13 +39,7 @@ app.get("/world", (req, res) => {
 app.get("/time", async (req, res) => {
   const result = await pool.query("SELECT NOW() ");
   res.json(result[0]);
-});
-
-app.post("/register", (req, res) => {});
-
-app.get("/login", (req, res) => {
-  auth.authenticateToken(req, res);
-});
+});*/
 
 app.get("/token", (req, res) => {
   auth.createToken(res, req);

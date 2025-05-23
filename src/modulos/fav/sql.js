@@ -6,7 +6,10 @@ function getFav(nickname, offset = 0) {
     const query =
       "SELECT video.id as video_id, video.url as url, video.thumbnail, video.title," +
       "video.num_comment as comments, video.num_likes as likes, video.num_fav as favs, video.num_share as shares," +
-      "user.username, user.profile_image as image " +
+      "user.username, user.nickname, user.profile_image as image, " +
+      "'TRUE' AS isSaved, "+
+      "CASE WHEN EXISTS ( SELECT 1 FROM likes  WHERE likes.user_id = user.id AND likes.video_id = video.id ) THEN 'TRUE' "+
+      "ELSE 'FALSE' END AS isLiked "+
       "FROM fav " +
       "LEFT JOIN user ON fav.user_id = user.id " +
       "LEFT JOIN video ON fav.video_id = video.id " +

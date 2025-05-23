@@ -4,11 +4,27 @@ const utilities = require("../../utils/utils");
 const auth = require("../../auth/auth");
 
 //Utilizados en los endpoints
-async function get(req, res) {
+async function getUser(req, res) {
+  const id = req.user.id;
+
+  console.log(id);
   try {
-    return res.json(await consultas.get());
+    const resultado = await consultas.getUser(id);
+
+    if (resultado.length > 0) {
+      console.log(resultado[0]);
+      return res.json(resultado[0]);
+    } else {
+      return res.json({
+        message: "User not found",
+        data: {
+          id: id,
+        },
+      });
+    }
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({ message: "Error", success: false });
   }
 }
 
@@ -54,7 +70,8 @@ async function getUserByNick(req, res) {
       });
     }
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({ message: "Error al obtener el usuario.", success: false });
   }
 }
 async function getUserByName(req, res) {
@@ -90,7 +107,8 @@ async function getUserByName(req, res) {
         },
       });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({ message: "Error al obtener el usuario.", success: false });
   }
 }
 
@@ -108,14 +126,47 @@ async function getFollowingUsers(req, res) {
     if (validate) return res.json(validate);
 
     const resultado = await consultas.getFollowingUsers(nickname);
-    if (resultado.length > 0) return res.json(resultado);
+    if (resultado.length > 0) return res.json(resultado[0]);
     else
       return res.json({
         message: "No sigues a nadie, LOL",
         success: true,
       });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({ message: "Error al obtener los seguidos.", success: false });
+  }
+}
+
+async function getUploadVideo(req, res) {
+  try {
+    const { nickname, offset } = req.body;
+    //#region  Verifica las variables
+    if (!nickname)
+      return res.json({
+        message: "No se ha proporcionado ningún nickname.",
+        success: false,
+      });
+
+    if (offset === undefined) parsedOffset = parseInt(0, 10);
+    else parsedOffset = parseInt(offset, 10);
+
+    //Si parsedOffset no es un número, devuelve un error y detiene la función.
+    if (isNaN(parsedOffset) || parsedOffset < 0) {
+      return reject(
+        new Error(
+          "El offset debe ser un número entero válido y mayor o igual a 0."
+        )
+      );
+    }
+    //#endregion
+
+    const likedVideos = await consultas.getUploadVideo(nickname, offset);
+    console.log(likedVideos);
+    return res.json(likedVideos);
+  } catch (error) {
+    logger.error(error);
+    return res.json({ message: "Error al obtener a los videos subidos.", success: false });
   }
 }
 
@@ -133,7 +184,7 @@ async function getFollowers(req, res) {
     if (validate) return res.json(validate);
 
     const resultado = await consultas.getFollowers(nickname);
-      console.log(resultado);
+    console.log(resultado);
     if (resultado.length > 0) return res.json(resultado);
     else
       return res.json({
@@ -141,7 +192,8 @@ async function getFollowers(req, res) {
         success: true,
       });
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({ message: "Error al obtener los seguidores.", success: false });
   }
 }
 
@@ -167,15 +219,20 @@ async function postUser(req, res) {
     const resultado = await consultas.postUser(
       username,
       nickname.toLowerCase(),
-      email,
+      email.toLowerCase(),
       hashedPassword,
       profile_image
     );
 
     if (resultado) {
       const token = auth.createToken(resultado.data);
-
-      return res.json(token);
+      const enviar = {
+        token: token.token,
+        id: await consultas.getIdByNickname(nickname)[0],
+      };
+      console.log(enviar);
+      console.log(token);
+      return res.json(enviar);
     } else {
       return res.json({
         message: "No se pudo registrar el usuario.",
@@ -183,49 +240,137 @@ async function postUser(req, res) {
       });
     }
   } catch (error) {
-    console.log(error);
-    return res.json({ message: "Error", success: false });
+    logger.error(error);
+    return res.json({ message: "Error al crear un usuario.", success: false });
   }
 }
 
+async function loginUser(req, res) {
+  const { nickname, password } = req.body;
 
-async function postFollow(req, res){
-  try{
+  if (!nickname)
+    return res.json({
+      message: "No se ha proporcionado el username.",
+      success: false,
+    });
+
+  if (!password)
+    return res.json({
+      message: "No se ha proporcionado la constraseña.",
+      success: false,
+    });
+
+  const hashedPassword = await consultas.getPassword(nickname);
+
+  if (hashedPassword <= 0)
+    return res.json({
+      message: "Nickname o Password erróneos.",
+      success: false,
+    });
+
+  console.log(
+    `Nickname : ${nickname}, Password : ${password}, hashed : ${hashedPassword[0].passwrd}`
+  );
+
+  const isPassword = await utilities.verifyPassword(
+    password,
+    hashedPassword[0].passwrd
+  );
+
+  if (isPassword.success) {
+    const data = { id: hashedPassword[0].id, nickname };
+    const token = auth.createToken(data);
+
+    if (!token.success)
+      res.json({
+        message: "Error al crear el token.",
+        sucess: false,
+      });
+
+    return res.json({
+      message: "Contraseña correcta.",
+      success: true,
+      token: token.token,
+      id : data.id
+    });
+  } else return res.json({ message: "Contraseña incorrecta.", success: false });
+}
+
+async function loginJWT(req, res) {
+  const { JWT } = req.body;
+
+  if (!JWT)
+    return res.json({
+      message: "No se ha proporcionado el token.",
+      success: false,
+    });
+
+  const isValid = utilities.verifyJWT(JWT);
+
+  if (isValid.success)
+    return res.json({ message: "Token correcto.", sucess: true });
+  else return res.json({ message: "Token incorrecto.", sucess: false });
+}
+
+async function postFollow(req, res) {
+  try {
+    if (!req.user.id)
+      return res.json({ message: "Error en la obtención del token." });
     const id = req.user.id;
-    const {nickname} = req.body;
+    const { nickname } = req.body;
     console.log(`id : ${id} nickname: ${nickname}`);
-    if(!id)
-      return res.json({message : "No se ha otorgado ningún usuario.", success : false});
+    if (!id)
+      return res.json({
+        message: "No se ha otorgado ningún usuario.",
+        success: false,
+      });
 
-    if(!nickname)
-      return res.json({message : "No se ha proporcionado un usuario al que seguir.", success : false});
+    if (!nickname)
+      return res.json({
+        message: "No se ha proporcionado un usuario al que seguir.",
+        success: false,
+      });
 
     const resultado = await consultas.postFollow(id, nickname);
 
-    if(resultado)
-      return res.json({message : "Se ha seguido al usuario con éxito.", success : true});
-  }catch(error){
-    console.log(error);
+    if (resultado)
+      return res.json({
+        message: "Se ha seguido al usuario con éxito.",
+        success: true,
+      });
+  } catch (error) {
+    logger.error(error);
+    if(error.message) return res.json({ message: "Error al dar follow.", success: false });
   }
 }
 
-async function postUnfollow(req, res){
-  try{
+async function postUnfollow(req, res) {
+  try {
     const id = req.user.id;
-    const {nickname} = req.body;
+    const { nickname } = req.body;
     console.log(`id : ${id} nickname: ${nickname}`);
-    if(!id)
-      return res.json({message : "No se ha otorgado ningún usuario.", success : false});
+    if (!id)
+      return res.json({
+        message: "No se ha otorgado ningún usuario.",
+        success: false,
+      });
 
-    if(!nickname)
-      return res.json({message : "No se ha proporcionado un usuario al que seguir.", success : false});
+    if (!nickname)
+      return res.json({
+        message: "No se ha proporcionado un usuario al que seguir.",
+        success: false,
+      });
 
     const resultado = await consultas.postUnfollow(id, nickname);
 
-    if(resultado)
-      return res.json({message : "Se ha seguido al usuario con éxito.", success : true});
-  }catch(error){
-    console.log(error);
+    if (resultado)
+      return res.json({
+        message: "Se ha seguido al usuario con éxito.",
+        success: true,
+      });
+  } catch (error) {
+    logger.error(error);
+    return res.json({ message: "Error al dar unfollow.", success: false });
   }
 }
 
@@ -235,7 +380,6 @@ async function putUser(req, res) {
   //Si el token tiene el role de user, entonces toma el id del token
   //Ya que en el método authenticateToken, en el objeto "req",
   //creas un nuevo objeto llamado user donde guardas los datos del usuario
-  console.log(req.body);
   const {
     id: targetId,
     username,
@@ -292,16 +436,14 @@ async function putUser(req, res) {
 
     return res.json(resultado);
   } catch (error) {
-    console.log(error);
-    return res.json({
-      message: "Error al actualizar un usuario.",
-      success: false,
-    });
+    logger.error(error);
+    return res.json({ message: "Error al actualizar a un usuario.", success: false });
   }
 }
 
 async function deleteUser(req, res) {
   const id = req.user.id;
+  console.log("h");
 
   try {
     if (!id) return res.json(respuestas.error(req, res, "Bad request", 400));
@@ -310,7 +452,8 @@ async function deleteUser(req, res) {
       if (resultado) return res.json(resultado);
     }
   } catch (error) {
-    console.log(error);
+    logger.error(error);
+    return res.json({ message: "Error al eliminar un usuario", success: false });
   }
 }
 
@@ -329,8 +472,9 @@ async function getIdByNickname(nickname) {
   }
 }
 module.exports = {
-  get,
+  getUser,
   getUserByNick,
+  getUploadVideo,
   // getUserById,
   getUserByName,
   postUser,
@@ -340,5 +484,7 @@ module.exports = {
   getFollowingUsers,
   getFollowers,
   postFollow,
-  postUnfollow
+  postUnfollow,
+  loginUser,
+  loginJWT,
 };

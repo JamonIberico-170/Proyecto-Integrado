@@ -5,6 +5,7 @@ const dns = require("dns");
 const fs = require("fs");
 const multer = require("multer");
 const path = require("path");
+const { success } = require("../red/respuestas");
 
 async function userExist(searchName, searchEmail) {
   if (!searchName) {
@@ -55,7 +56,7 @@ async function createHash(password) {
 }
 
 async function verifyPassword(password, hashedPassword) {
-  
+  console.log(`password : ${password}   hashed : ${hashedPassword}`);
   const comparation = await bcrypt.compare(password, hashedPassword);
   
   if (comparation)
@@ -63,6 +64,15 @@ async function verifyPassword(password, hashedPassword) {
   else return { message: "La contraseña es incorrecta.", success: false };
 }
 
+async function verifyJWT(JWT) {
+  try {
+    jwt.verify(JWT, process.env.JWT_SECRET); //En caso de que sea inválido saltará un error
+    
+    return { message: "El token es válido.", success: true };
+  } catch (error) {
+    return { message: "El token es inválido.", success: false };
+  }
+}
 function validateId(id) {
   const isUndefined = id === undefined || id === null;
   const isNotNumeric = !/^\d+$/.test(id);
@@ -73,7 +83,7 @@ function validateId(id) {
       message: "El ID no cumple con el estándar preestablecido.",
       success: false,
       data: {
-        id : id
+        id: id,
       },
       standard: {
         range: "1..inf",
@@ -133,9 +143,8 @@ function validateEmailSyntax(email) {
 
 async function verifyEmail(email) {
   if (!validateEmailSyntax(email)) {
-    
     return {
-      message: "El correo no cumple con los estándares preestablecidos.",
+      message: "El correo no cumple con los estándares",
       success: false,
       data: { email },
       standard: {
@@ -148,9 +157,8 @@ async function verifyEmail(email) {
   }
 
   const domain = email.split("@")[1];
-  
+
   return new Promise((resolve) => {
-    
     dns.resolveMx(domain, (err, addresses) => {
       if (err || !addresses || addresses.length === 0) {
         resolve({
@@ -171,15 +179,14 @@ async function verifyEmail(email) {
 }
 
 async function uploadVideo(req, res) {
-
-  const {nickname} = req.body;
+  const { nickname } = req.body;
 
   const uploadPath = path.join(__dirname, `uploads/${nickname}/`);
 
   if (!fs.existsSync(uploadPath)) {
     fs.mkdirSync(uploadPath);
   }
-  
+
   const storage = multer.diskStorage({
     destination: function (req, file, cb) {
       cb(null, `uploads/${nickname}/`);
@@ -192,7 +199,7 @@ async function uploadVideo(req, res) {
   });
 
   const upload = multer({ storage: storage });
-  upload.single('video');
+  upload.single("video");
 }
 
 function generateURL(fullPath) {
@@ -200,14 +207,15 @@ function generateURL(fullPath) {
 
   const parts = normalizedPath.split(path.sep); //Te hace una lista con cada uno de los cachitos de la ruta
 
-  const relativeParts = parts.slice(parts.indexOf('uploads')); //Nos quedamos desde uploads hacia adelante
+  const relativeParts = parts.slice(parts.indexOf("uploads")); //Nos quedamos desde uploads hacia adelante
 
-  return relativeParts.join('/'); //Reconstruímos la ruta añadiendo / entre cada elemento de la lista
+  return relativeParts.join("/"); //Reconstruímos la ruta añadiendo / entre cada elemento de la lista
 }
 
 function randomURL() {
-  const caracteres = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let resultado = '';
+  const caracteres =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let resultado = "";
   for (let i = 0; i < 9; i++) {
     const indiceAleatorio = Math.floor(Math.random() * caracteres.length);
     resultado += caracteres[indiceAleatorio];
@@ -225,5 +233,6 @@ module.exports = {
   uploadVideo,
   validateNickname,
   generateURL,
-  randomURL
+  randomURL,
+  verifyJWT
 };
