@@ -4,6 +4,7 @@ function authenticateToken(req, res, next) {
   const token = req.header("Authorization")?.replace("Bearer ", "");
   
   if (!token) {
+    console.log("NO se ha proporcionado el token");
     return res
       .status(401)
       .json({ message: "Acceso denegado. Token no proporcionado." });

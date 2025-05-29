@@ -1,19 +1,25 @@
-version: '3.8'
-
 services:
   database:
     image: mysql
     environment:
       - MYSQL_ROOT_PASSWORD=root
       - MYSQL_DATABASE=tiktokdb
+    container_name: mysql-db
     ports:
-      - 3307:3306
-    
-  app:
-    build: .
+      - 3306:3306
+    volumes:
+      - db_data:/var/lib/mysql
+      - ../uploads:/app/uploads
+  phpmyadmin:
+    image: phpmyadmin
+    environment:
+      PMA_HOST: database
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - 8080:80
     depends_on:
       - database
-    links:
-      - database
-    ports:
-      - 3000:3000
+volumes:
+  db_data:
+

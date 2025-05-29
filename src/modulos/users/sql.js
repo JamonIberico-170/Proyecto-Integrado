@@ -65,7 +65,7 @@ function getUploadVideo(nickname, offset = 0) {
 function getFollowingUsers(nickname) {
   return new Promise((resolve, reject) => {
     const subquery = "(SELECT id FROM user where nickname = ?)";
-    const query = `SELECT user.username FROM follower LEFT JOIN user ON user.id = follower.user_id  WHERE follower_id = (SELECT id FROM user where nickname = ?)`;
+    const query = `SELECT user.profile_image, user.username, user.nickname  FROM follower LEFT JOIN user ON user.id = follower.user_id  WHERE follower_id = (SELECT id FROM user where nickname = ?)`;
 
     conexion.execute(query, [nickname], (error, result) => {
       if (error) reject(error);
@@ -77,7 +77,7 @@ function getFollowingUsers(nickname) {
 function getFollowers(nickname) {
   return new Promise((resolve, reject) => {
     const subquery = "(SELECT id FROM user where nickname = ?)";
-    const query = `SELECT user.username FROM follower LEFT JOIN user ON user.id = follower.follower_id WHERE user_id = (SELECT id FROM user where nickname = ?)`;
+    const query = `SELECT user.profile_image, user.username, user.nickname FROM follower LEFT JOIN user ON user.id = follower.follower_id WHERE user_id = (SELECT id FROM user where nickname = ?)`;
     conexion.execute(query, [nickname], (error, result) => {
       if (error) reject(error);
       else resolve(result);

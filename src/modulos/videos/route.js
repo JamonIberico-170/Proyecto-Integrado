@@ -29,7 +29,7 @@ router.post("/", authenticateToken, controller.getVideoById);
 //router.get("/", controller2.getVideoURL);
 
 router.post(
-  "/",
+  "/upload",
   authenticateToken,
   (req, res, next) => {
     req.url = utilities.randomURL();

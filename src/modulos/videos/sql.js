@@ -8,8 +8,8 @@ function get5RandomVideo() {
     const query =
       "SELECT video.id as video_id, video.url as url, video.thumbnail, video.title," +
       "video.num_comment as comments, video.num_likes as likes, video.num_fav as favs, video.num_share as shares," +
-      "user.id as user_id, user.username, user.profile_image as image " +
-      "FROM user LEFT JOIN video ON video.user_id = user.id ORDER BY RAND() LIMIT 6";
+      "user.id as user_id, user.nickname, user.username, user.profile_image as image " +
+      "FROM video LEFT JOIN user ON user.id = video.user_id ORDER BY RAND() LIMIT 6";
     conexion.query(query, (error, result) => {
       if (error) reject(error);
       else resolve(result);
@@ -36,7 +36,7 @@ function getVideoById(videoID, userID) {
   });
 }
 
-function postVideo(url, thumbnail, user_id, title) {
+function postVideo(url, thumbnail, user_id, title = "") {
   return new Promise((resolve, reject) => {
     const query =
       "INSERT INTO video (url, thumbnail, user_id, title) values (?,?,?,?)";

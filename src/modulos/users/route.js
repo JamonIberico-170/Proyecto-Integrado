@@ -42,7 +42,7 @@ router.post("/unfollow", authenticateToken, controller.postUnfollow);
 
 router.post("/auth/register",  controller.postUser);
 
-router.put("/", authenticateToken, controller.putUser);
+router.put("/", authenticateToken, filesystem.uploadProfileImage,  controller.putUser);
 
 router.delete("/", authenticateToken, controller.deleteUser);
 

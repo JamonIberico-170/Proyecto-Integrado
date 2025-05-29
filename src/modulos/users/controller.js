@@ -2,17 +2,18 @@ const consultas = require("./sql");
 const respuestas = require("../../red/respuestas");
 const utilities = require("../../utils/utils");
 const auth = require("../../auth/auth");
+const logger = require("../../utils/logger");
+const { Console } = require("winston/lib/winston/transports");
 
 //Utilizados en los endpoints
 async function getUser(req, res) {
   const id = req.user.id;
 
-  console.log(id);
   try {
     const resultado = await consultas.getUser(id);
 
     if (resultado.length > 0) {
-      console.log(resultado[0]);
+      //console.log(resultado[0]);
       return res.json(resultado[0]);
     } else {
       return res.json({
@@ -49,7 +50,7 @@ async function getUser(req, res) {
 // }
 async function getUserByNick(req, res) {
   const { nickname } = req.query;
-
+  console.log(nickname);
   if (!nickname)
     return res.json({
       message: "No se ha encontrado el nickname.",
@@ -57,10 +58,12 @@ async function getUserByNick(req, res) {
     });
 
   const validate = utilities.validateNickname(nickname);
+  console.log(validate);
   if (validate) return res.json(validate);
   try {
     const resultado = await consultas.getUserByNick(nickname);
-    if (resultado.length > 0) return res.json(resultado);
+    console.log(resultado);
+    if (resultado.length > 0) return res.json(resultado[0]);
     else {
       return res.json({
         message: "User not found",
@@ -71,7 +74,10 @@ async function getUserByNick(req, res) {
     }
   } catch (error) {
     logger.error(error);
-    return res.json({ message: "Error al obtener el usuario.", success: false });
+    return res.json({
+      message: "Error al obtener el usuario.",
+      success: false,
+    });
   }
 }
 async function getUserByName(req, res) {
@@ -108,7 +114,10 @@ async function getUserByName(req, res) {
       });
   } catch (error) {
     logger.error(error);
-    return res.json({ message: "Error al obtener el usuario.", success: false });
+    return res.json({
+      message: "Error al obtener el usuario.",
+      success: false,
+    });
   }
 }
 
@@ -126,7 +135,9 @@ async function getFollowingUsers(req, res) {
     if (validate) return res.json(validate);
 
     const resultado = await consultas.getFollowingUsers(nickname);
-    if (resultado.length > 0) return res.json(resultado[0]);
+
+    console.log(`Usuarios que sigue : ${JSON.stringify(resultado)}`);
+    if (resultado.length > 0) return res.json(resultado);
     else
       return res.json({
         message: "No sigues a nadie, LOL",
@@ -134,7 +145,40 @@ async function getFollowingUsers(req, res) {
       });
   } catch (error) {
     logger.error(error);
-    return res.json({ message: "Error al obtener los seguidos.", success: false });
+    return res.json({
+      message: "Error al obtener los seguidos.",
+      success: false,
+    });
+  }
+}
+
+async function getFollowers(req, res) {
+  try {
+    const { nickname } = req.body;
+
+    if (!nickname)
+      return res.json({
+        message: "No se ha encontrado el nickname.",
+        success: false,
+      });
+
+    const validate = utilities.validateNickname(nickname);
+    if (validate) return res.json(validate);
+
+    const resultado = await consultas.getFollowers(nickname);
+    console.log(`Usuarios que le siguen : ${JSON.stringify(resultado)}`);
+    if (resultado.length > 0) return res.json(resultado);
+    else
+      return res.json({
+        message: "No te sigue nadie, xD",
+        success: true,
+      });
+  } catch (error) {
+    logger.error(error);
+    return res.json({
+      message: "Error al obtener los seguidores.",
+      success: false,
+    });
   }
 }
 
@@ -160,40 +204,15 @@ async function getUploadVideo(req, res) {
       );
     }
     //#endregion
-
-    const likedVideos = await consultas.getUploadVideo(nickname, offset);
-    console.log(likedVideos);
-    return res.json(likedVideos);
+    const uploadedVideos = await consultas.getUploadVideo(nickname, offset);
+    //console.log(uploadedVideos);
+    return res.json(uploadedVideos);
   } catch (error) {
     logger.error(error);
-    return res.json({ message: "Error al obtener a los videos subidos.", success: false });
-  }
-}
-
-async function getFollowers(req, res) {
-  try {
-    const { nickname } = req.body;
-
-    if (!nickname)
-      return res.json({
-        message: "No se ha encontrado el nickname.",
-        success: false,
-      });
-
-    const validate = utilities.validateNickname(nickname);
-    if (validate) return res.json(validate);
-
-    const resultado = await consultas.getFollowers(nickname);
-    console.log(resultado);
-    if (resultado.length > 0) return res.json(resultado);
-    else
-      return res.json({
-        message: "No te sigue nadie, xD",
-        success: true,
-      });
-  } catch (error) {
-    logger.error(error);
-    return res.json({ message: "Error al obtener los seguidores.", success: false });
+    return res.json({
+      message: "Error al obtener a los videos subidos.",
+      success: false,
+    });
   }
 }
 
@@ -291,7 +310,7 @@ async function loginUser(req, res) {
       message: "Contraseña correcta.",
       success: true,
       token: token.token,
-      id : data.id
+      id: data.id,
     });
   } else return res.json({ message: "Contraseña incorrecta.", success: false });
 }
@@ -340,12 +359,17 @@ async function postFollow(req, res) {
       });
   } catch (error) {
     logger.error(error);
-    if(error.message) return res.json({ message: "Error al dar follow.", success: false });
+    if (error.message)
+      return res.json({ message: "Error al dar follow.", success: false });
   }
 }
 
 async function postUnfollow(req, res) {
   try {
+    if (!req.user.id) {
+      console.log("Error en la obtención del token");
+      return res.json({ message: "Error en la obtención del token." });
+    }
     const id = req.user.id;
     const { nickname } = req.body;
     console.log(`id : ${id} nickname: ${nickname}`);
@@ -380,14 +404,16 @@ async function putUser(req, res) {
   //Si el token tiene el role de user, entonces toma el id del token
   //Ya que en el método authenticateToken, en el objeto "req",
   //creas un nuevo objeto llamado user donde guardas los datos del usuario
+
   const {
     id: targetId,
     username,
     nickname: targetNickname,
     password,
     newpassword,
-    profile_image,
   } = req.body;
+
+  const profile_image = req.body.profileimageurl;
 
   const isAdmin = req.user.role === "admin";
 
@@ -422,7 +448,11 @@ async function putUser(req, res) {
       if (resultado.success) {
         campos.push("passwrd = ?");
         valores.push(await utilities.createHash(newpassword));
-      } else return res.json(resultado);
+        console.log("está bien mi loco");
+      } else {
+        console.log("asd"+resultado.message);
+        return res.json(resultado);
+      }
     }
     if (profile_image) {
       campos.push("profile_image = ?");
@@ -433,11 +463,13 @@ async function putUser(req, res) {
     valores.push(id);
 
     const resultado = await consultas.putUser(valores, campos);
-
-    return res.json(resultado);
+    return res.json({message: "Se ha actualizado el usuario con éxito.", success: true});
   } catch (error) {
     logger.error(error);
-    return res.json({ message: "Error al actualizar a un usuario.", success: false });
+    return res.json({
+      message: "Error al actualizar a un usuario.",
+      success: false,
+    });
   }
 }
 
@@ -453,7 +485,10 @@ async function deleteUser(req, res) {
     }
   } catch (error) {
     logger.error(error);
-    return res.json({ message: "Error al eliminar un usuario", success: false });
+    return res.json({
+      message: "Error al eliminar un usuario",
+      success: false,
+    });
   }
 }
 

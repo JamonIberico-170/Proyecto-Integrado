@@ -10,7 +10,7 @@ CREATE TABLE user (
     nickname VARCHAR(20) NOT NULL,
     email VARCHAR(40) NOT NULL,
     passwrd  VARCHAR(60) NOT NULL,
-    profile_image VARCHAR(30),
+    profile_image VARCHAR(45),
     date_create TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     num_following INT DEFAULT 0,
     num_followers INT DEFAULT 0,

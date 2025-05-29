@@ -42,7 +42,7 @@ async function getCommentsVideo(req, res) {
 
 async function postComment(req, res) {
   try {
-    const { videoid } = req.body;
+    const { videoid, comment } = req.body;
     const id = req.user.id;
 
     if (!videoid) {
@@ -57,8 +57,14 @@ async function postComment(req, res) {
         success: false,
       });
     }
+    if(!comment){
+      return res.json({
+        message: "No se ha encontado el comentario.",
+        success: false,
+      });
+    }
 
-    const resultado = await consultas.postComments();
+    const resultado = await consultas.postComments(id, videoid, comment);
 
     if (!resultado)
       return res.json({
@@ -74,13 +80,14 @@ async function postComment(req, res) {
 
 async function deleteComment(req, res) {
   try {
-    const { commentid } = req.body;
-
+    const { commentid } = req.query;
+    
+    console.log(commentid);
     if (!commentid)
       return res.json({ message: "No se ha encontrado el comentario." });
 
     const resultado = await consultas.deleteComments(commentid);
-
+    console.log(resultado);
     if (!resultado)
       return res.json({
         message: "No se ha podido eliminar el comentario.",
@@ -91,6 +98,7 @@ async function deleteComment(req, res) {
       success: true,
     });
   } catch (error) {
+    console.log(error);
     logger.error(error);
     return res.json({ message: "Error al eliminar el comentario.", success: false });
   }

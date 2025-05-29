@@ -6,8 +6,10 @@ const logger = require("../../utils/logger");
 async function get5RandomVideo(req, res) {
   try {
     const resultado = await consultas.get5RandomVideo();
-    if (resultado) return res.json(resultado);
-    else
+    if (resultado) {
+      //logger.info(JSON.stringify(resultado));
+      return res.json(resultado);
+    } else
       return res.json({
         message: "Ha habido un problema al solicitar los videos.",
         success: false,
@@ -26,7 +28,7 @@ async function getVideoById(req, res) {
       return res.json({ message: "No se ha encontrado el id", success: false });
 
     const resultado = await consultas.getVideoById(videoId, id);
-    console.log(resultado);
+    //console.log(resultado);
     return res.json(resultado);
   } catch (error) {
     logger.error(error);
@@ -83,10 +85,10 @@ async function postVideo(req, res) {
 
 async function deleteVideo(req, res) {
   try {
-    const { id } = req.body;
+    const { videoid } = req.query;
     const userid = req.user.id;
-
-    if (!id)
+    console.log(`ID : ${videoid} USERID : ${userid}`);
+    if (!videoid)
       return res.json({
         message: "No se ha encontrado el vídeo.",
         success: false,
@@ -97,7 +99,7 @@ async function deleteVideo(req, res) {
         success: false,
       });
 
-    const resultado = await consultas.deleteVideo(id, userid);
+    const resultado = await consultas.deleteVideo(videoid, userid);
     req.url.url = resultado[0].url;
     aux.deleteVideo(resultado[0].url);
     return res.json({ s: "Video eliminado con éxito.", success: true });

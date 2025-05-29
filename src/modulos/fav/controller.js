@@ -44,8 +44,7 @@ async function getFavByUser(req, res) {
 async function postFav(req, res) {
   try {
     const {userid: targetid, videoid } = req.body;
-    const isAdmin = req.user.role === "admin";
-
+    const isAdmin = req.user.role === "admin";;
    const userid = isAdmin ? targetid : req.user.id;
 
     if (!userid || !videoid) {
@@ -69,7 +68,7 @@ async function deleteFav(req, res){
     try{
        const { videoId } = req.query;
         const userid = req.user.id;
-
+        console.log(`video : ${videoId} user: ${userid}`);
         if(!videoId){
             return res.json({
                 message: "No se ha encontrado el id del video.",

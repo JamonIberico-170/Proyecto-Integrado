@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const multer = require("multer");
 
 async function getImage(req, res) {
   const { url } = req.body;
@@ -31,6 +32,52 @@ async function getImage(req, res) {
   }
 }
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const { nickname } = req.body;
+
+    if (!nickname) {
+      next();
+    }
+
+    const uploadPath = path.join(__dirname, "../../uploads", nickname);
+
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
+
+    cb(null, uploadPath);
+  },
+
+  filename: function (req, file, cb) {
+    const ext = path.extname(file.originalname);
+    const filename = "profile" + ext;
+    const { nickname } = req.body;
+
+    req.body.profileimageurl = path.join("uploads", nickname, filename);
+
+    cb(null, filename); 
+  },
+});
+
+const upload = multer({ storage });
+
+const uploadProfileImage = [
+  upload.single("profile_image"),
+
+  (req, res, next) => {
+    const { nickname } = req.body;
+    console.log(`nickname : ${nickname}   req.file : ${req.file}`);
+    if (!nickname || !req.file) {
+      return next();
+    }
+    console.log("Imagen de perfil guardada en:", req.profileImagePath);
+    next();
+  },
+];
+
+
 module.exports = {
   getImage,
+  uploadProfileImage
 };
