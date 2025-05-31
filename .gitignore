@@ -1,7 +1,4 @@
-node_modules
-test.js
-admindeploy.txt
+node_modules/
 uploads
 data
 logs
-.gitignore
