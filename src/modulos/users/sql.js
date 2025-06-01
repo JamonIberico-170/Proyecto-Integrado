@@ -105,7 +105,7 @@ function postUser(username, nickname, email, password, profile_image) {
       "INSERT INTO user (username, nickname, email, passwrd, profile_image) VALUES(?,?,?,?,?)";
     conexion.execute(
       query,
-      [username, nickname, email, password, profile_image || null],
+      [username, nickname, email, password, profile_image || "uploads/default/default.png"],
       (error, result) => {
         if (error) {
           conexion.rollback();

@@ -43,7 +43,7 @@ function postVideo(url, thumbnail, user_id, title = "") {
 
     conexion.execute(
       query,
-      [url, thumbnail || "defecto", user_id, title],
+      [url, thumbnail || "uploads/defaultthumbnail.png", user_id, title],
       (error, result) => {
         if (error) {
           conexion.rollback();
